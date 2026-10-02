@@ -1,248 +1,732 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>مولد المحتوى</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      font-family: -apple-system, "Segoe UI", Tahoma, sans-serif;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-      background: #f5f7fa;
-      color: #1a1a1a;
-      line-height: 1.7;
-    }
-    h1 { font-size: 24px; margin-bottom: 8px; }
-    .subtitle { color: #666; font-size: 14px; margin-bottom: 24px; }
-    .card {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-      margin-bottom: 16px;
-    }
-    label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; color: #333; }
-    input, textarea, select {
-      width: 100%;
-      padding: 12px;
-      font-size: 15px;
-      border: 1px solid #d0d5dd;
-      border-radius: 8px;
-      font-family: inherit;
-      outline: none;
-      transition: border 0.15s;
-    }
-    input:focus, textarea:focus, select:focus { border-color: #0070f3; }
-    textarea { min-height: 120px; resize: vertical; }
-    .row { display: flex; gap: 12px; align-items: flex-end; }
-    .row > * { flex: 1; }
-    button {
-      background: #0070f3;
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 8px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-    button:hover:not(:disabled) { background: #005bb5; }
-    button:disabled { background: #a0aec0; cursor: not-allowed; }
-    .btn-group { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-    .btn-secondary { background: #28a745; }
-    .btn-secondary:hover { background: #1e7e34; }
-    .btn-ghost { background: #e2e8f0; color: #333; }
-    .btn-ghost:hover { background: #cbd5e0; }
-    .output {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      line-height: 1.9;
-      display: none;
-    }
-    .output.visible { display: block; }
-    .output-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid #e2e8f0;
-    }
-    .output-title { font-weight: 600; font-size: 14px; color: #666; }
-    .error {
-      background: #fee;
-      color: #c00;
-      padding: 12px;
-      border-radius: 8px;
-      margin-top: 12px;
-      display: none;
-      font-size: 14px;
-    }
-    .error.visible { display: block; }
-    .loading {
-      display: inline-block;
-      width: 16px;
-      height: 16px;
-      border: 2px solid #fff;
-      border-top-color: transparent;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      vertical-align: middle;
-      margin-left: 8px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>محادثة ذكية</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: -apple-system, "Segoe UI", Tahoma, sans-serif;
+    background: #e5ddd5;
+    display: flex;
+    flex-direction: column;
+    color: #1a1a1a;
+  }
+
+  /* شريط علوي */
+  .topbar {
+    background: #075e54;
+    color: white;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    z-index: 10;
+    flex-shrink: 0;
+  }
+  .topbar h1 { font-size: 16px; font-weight: 600; flex: 1; }
+  .topbar select {
+    background: rgba(255,255,255,0.15);
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    outline: none;
+  }
+  .topbar select option { color: #333; background: white; }
+  .lock-btn {
+    background: rgba(255,255,255,0.15);
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  /* شاشة كلمة المرور */
+  .lock-screen {
+    position: fixed;
+    inset: 0;
+    background: #075e54;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+  .lock-screen.hidden { display: none; }
+  .lock-box {
+    background: white;
+    padding: 32px 24px;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 360px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  }
+  .lock-box h2 { color: #075e54; margin-bottom: 8px; font-size: 20px; }
+  .lock-box p { color: #666; font-size: 13px; margin-bottom: 20px; }
+  .lock-box input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #d0d5dd;
+    border-radius: 8px;
+    font-size: 15px;
+    margin-bottom: 12px;
+    outline: none;
+    text-align: center;
+    font-family: inherit;
+  }
+  .lock-box input:focus { border-color: #075e54; }
+  .lock-box button {
+    width: 100%;
+    padding: 12px;
+    background: #075e54;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .lock-box button:hover { background: #064a42; }
+
+  /* منطقة الرسائل */
+  .chat-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    scroll-behavior: smooth;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(255,255,255,0.4) 0%, transparent 40%),
+      radial-gradient(circle at 80% 70%, rgba(255,255,255,0.3) 0%, transparent 40%);
+  }
+  .chat-area::-webkit-scrollbar { width: 8px; }
+  .chat-area::-webkit-scrollbar-track { background: transparent; }
+  .chat-area::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 4px; }
+
+  /* فقاعة رسالة */
+  .msg {
+    max-width: 78%;
+    padding: 8px 12px 6px;
+    border-radius: 12px;
+    position: relative;
+    font-size: 15px;
+    line-height: 1.6;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.08);
+    animation: fadeIn 0.2s ease;
+    direction: rtl;
+    text-align: right;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .msg.user {
+    align-self: flex-start;
+    background: #dcf8c6;
+    border-top-left-radius: 2px;
+  }
+  .msg.bot {
+    align-self: flex-end;
+    background: white;
+    border-top-right-radius: 2px;
+  }
+  .msg.system {
+    align-self: center;
+    background: rgba(0,0,0,0.06);
+    color: #555;
+    font-size: 12px;
+    max-width: 90%;
+    text-align: center;
+    padding: 6px 12px;
+    border-radius: 8px;
+    box-shadow: none;
+  }
+
+  .msg .time {
+    font-size: 10px;
+    color: #888;
+    display: block;
+    margin-top: 4px;
+    text-align: left;
+    direction: ltr;
+  }
+  .msg.user .time { text-align: right; }
+
+  /* صور داخل الرسالة */
+  .msg img {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    display: block;
+    cursor: pointer;
+  }
+
+  /* ملف داخل الرسالة */
+  .file-attach {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,0,0,0.06);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+  .file-attach .icon { font-size: 20px; }
+
+  /* أزرار على رسالة البوت */
+  .msg-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #e2e8f0;
+    flex-wrap: wrap;
+  }
+  .msg-actions button {
+    background: transparent;
+    border: 1px solid #d0d5dd;
+    color: #444;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .msg-actions button:hover { background: #075e54; color: white; border-color: #075e54; }
+
+  /* مؤشر كتابة */
+  .typing-indicator {
+    align-self: flex-end;
+    background: white;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border-top-right-radius: 2px;
+    display: flex;
+    gap: 4px;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.08);
+  }
+  .typing-indicator span {
+    width: 7px; height: 7px;
+    background: #999;
+    border-radius: 50%;
+    animation: bounce 1.3s infinite;
+  }
+  .typing-indicator span:nth-child(2) { animation-delay: 0.15s; }
+  .typing-indicator span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+    30% { transform: translateY(-6px); opacity: 1; }
+  }
+
+  /* منطقة الإدخال */
+  .input-area {
+    background: #f0f0f0;
+    padding: 8px 12px;
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    flex-shrink: 0;
+    border-top: 1px solid #ddd;
+  }
+  .attach-btn {
+    background: transparent;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    padding: 8px;
+    color: #075e54;
+    flex-shrink: 0;
+  }
+  .attach-btn:hover { background: rgba(7,94,84,0.1); border-radius: 50%; }
+
+  .input-wrapper {
+    flex: 1;
+    background: white;
+    border-radius: 20px;
+    padding: 8px 14px;
+    display: flex;
+    align-items: flex-end;
+  }
+  .input-wrapper textarea {
+    flex: 1;
+    border: none;
+    outline: none;
+    resize: none;
+    font-family: inherit;
+    font-size: 15px;
+    line-height: 1.4;
+    max-height: 120px;
+    background: transparent;
+    padding: 4px 0;
+  }
+
+  .send-btn {
+    background: #075e54;
+    color: white;
+    border: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    font-size: 20px;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+  }
+  .send-btn:hover:not(:disabled) { background: #064a42; }
+  .send-btn:disabled { background: #a0aec0; cursor: not-allowed; }
+
+  /* معاينة المرفقات قبل الإرسال */
+  .attachments-preview {
+    padding: 8px 12px;
+    background: #f0f0f0;
+    display: none;
+    gap: 8px;
+    flex-wrap: wrap;
+    border-top: 1px solid #ddd;
+  }
+  .attachments-preview.visible { display: flex; }
+  .attach-item {
+    position: relative;
+    background: white;
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 180px;
+  }
+  .attach-item img { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; }
+  .attach-item .remove {
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    background: #e53e3e;
+    color: white;
+    border: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    font-size: 11px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* عارض الصور */
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.9);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    cursor: pointer;
+  }
+  .lightbox.visible { display: flex; }
+  .lightbox img { max-width: 95%; max-height: 95%; border-radius: 4px; }
+</style>
 </head>
 <body>
 
-<h1>✍️ مولد المحتوى</h1>
-<p class="subtitle">اكتب طلبك واحصل على محتوى احترافي جاهز للنسخ.</p>
-
-<div class="card">
-  <label for="password">كلمة المرور</label>
-  <input type="password" id="password" placeholder="أدخل كلمة المرور" style="margin-bottom: 16px;">
-
-  <label for="model">النموذج</label>
-  <select id="model" style="margin-bottom: 16px;">
-    <option value="claude-sonnet-5">Claude Sonnet 5 (كتابة إبداعية)</option>
-    <option value="gemini-3.7-flash">Gemini 3.7 Flash (سريع)</option>
-    <option value="gpt-5.5">GPT 5.5 (متوازن)</option>
-    <option value="deepseek-v4-flash-0731">DeepSeek V4 Flash (اقتصادي)</option>
-    <option value="seed-2.1-turbo">Seed 2.1 Turbo (سريع جدًا)</option>
-    <option value="claude-opus-4.6">Claude Opus 4.6 (قوي)</option>
-    <option value="gpt-5.5-pro">GPT 5.5 Pro (متقدم)</option>
-  </select>
-
-  <label for="prompt">طلبك</label>
-  <textarea id="prompt" placeholder="مثال: اكتب مقالًا عن الذكاء الاصطناعي في التعليم..."></textarea>
-
-  <div class="btn-group">
-    <button id="generateBtn" onclick="generate()">✨ توليد</button>
-    <button class="btn-ghost" onclick="clearAll()">مسح</button>
+<!-- شاشة القفل -->
+<div class="lock-screen" id="lockScreen">
+  <div class="lock-box">
+    <h2>🔒 محادثة ذكية</h2>
+    <p>أدخل كلمة المرور للمتابعة</p>
+    <input type="password" id="lockInput" placeholder="كلمة المرور" autofocus>
+    <button onclick="unlock()">دخول</button>
   </div>
-
-  <div id="error" class="error"></div>
 </div>
 
-<div id="output" class="output">
-  <div class="output-header">
-    <span class="output-title">النتيجة</span>
-    <div class="btn-group" style="margin: 0;">
-      <button class="btn-secondary" onclick="copyText()">📋 نسخ</button>
-      <button class="btn-ghost" onclick="downloadText()">⬇️ تنزيل كملف</button>
-    </div>
+<!-- الشريط العلوي -->
+<div class="topbar">
+  <h1>💬 محادثة ذكية</h1>
+  <select id="model" title="النموذج">
+    <option value="claude-sonnet-5">Claude Sonnet 5</option>
+    <option value="gemini-3.7-flash">Gemini 3.7 Flash</option>
+    <option value="gpt-5.5">GPT 5.5</option>
+    <option value="deepseek-v4-flash-0731">DeepSeek V4 Flash</option>
+    <option value="seed-2.1-turbo">Seed 2.1 Turbo</option>
+    <option value="claude-opus-4.6">Claude Opus 4.6</option>
+    <option value="gpt-5.5-pro">GPT 5.5 Pro</option>
+  </select>
+  <button class="lock-btn" onclick="lockNow()" title="قفل">🔒</button>
+</div>
+
+<!-- منطقة المحادثة -->
+<div class="chat-area" id="chatArea"></div>
+
+<!-- معاينة المرفقات -->
+<div class="attachments-preview" id="attachPreview"></div>
+
+<!-- منطقة الإدخال -->
+<div class="input-area">
+  <button class="attach-btn" onclick="document.getElementById('fileInput').click()" title="إرفاق صورة أو ملف">📎</button>
+  <input type="file" id="fileInput" multiple accept="image/*,.txt,.md,.json,.csv,.log" style="display:none" onchange="handleFiles(event)">
+  <div class="input-wrapper">
+    <textarea id="textInput" placeholder="اكتب رسالة..." rows="1"></textarea>
   </div>
-  <div id="text"></div>
+  <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled>➤</button>
+</div>
+
+<!-- عارض الصور -->
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('visible')">
+  <img id="lightboxImg" src="">
 </div>
 
 <script>
-  // استرجاع كلمة المرور والنموذج المحفوظين
-  window.addEventListener('DOMContentLoaded', () => {
-    const savedPass = localStorage.getItem('site_password');
-    if (savedPass) document.getElementById('password').value = savedPass;
-    const savedModel = localStorage.getItem('site_model');
-    if (savedModel) document.getElementById('model').value = savedModel;
+  const chatArea = document.getElementById('chatArea');
+  const textInput = document.getElementById('textInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const fileInput = document.getElementById('fileInput');
+  const attachPreview = document.getElementById('attachPreview');
+  const lockScreen = document.getElementById('lockScreen');
+  const modelSelect = document.getElementById('model');
+
+  let pendingAttachments = [];  // [{type, name, data, mime}]
+  let history = [];              // [{role, content}] للسياق
+
+  // ============ القفل ============
+  function unlock() {
+    const pass = document.getElementById('lockInput').value.trim();
+    if (!pass) return;
+    localStorage.setItem('chat_password', pass);
+    lockScreen.classList.add('hidden');
+    initChat();
+  }
+  function lockNow() {
+    localStorage.removeItem('chat_password');
+    location.reload();
+  }
+  document.getElementById('lockInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') unlock();
   });
 
-  function showError(msg) {
-    const el = document.getElementById('error');
-    el.textContent = msg;
-    el.classList.add('visible');
+  // ============ التهيئة ============
+  function initChat() {
+    const savedModel = localStorage.getItem('chat_model');
+    if (savedModel) modelSelect.value = savedModel;
+
+    if (chatArea.children.length === 0) {
+      addSystemMessage('ابدأ المحادثة بكتابة رسالة، أو أرفق صورة أو ملفًا نصيًا 📎');
+    }
   }
 
-  function hideError() {
-    document.getElementById('error').classList.remove('visible');
+  // فتح تلقائي إذا كانت كلمة المرور محفوظة
+  window.addEventListener('DOMContentLoaded', () => {
+    const saved = localStorage.getItem('chat_password');
+    if (saved) {
+      document.getElementById('lockInput').value = saved;
+      lockScreen.classList.add('hidden');
+      initChat();
+    }
+  });
+
+  // ============ إدارة الرسائل ============
+  function now() {
+    return new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
   }
 
-  async function generate() {
-    const prompt = document.getElementById('prompt').value.trim();
-    const password = document.getElementById('password').value.trim();
-    const model = document.getElementById('model').value;
-    const btn = document.getElementById('generateBtn');
-    const output = document.getElementById('output');
-    const textDiv = document.getElementById('text');
+  function addSystemMessage(text) {
+    const div = document.createElement('div');
+    div.className = 'msg system';
+    div.textContent = text;
+    chatArea.appendChild(div);
+    scrollToBottom();
+  }
 
-    hideError();
+  function addMessage(role, content, options = {}) {
+    const div = document.createElement('div');
+    div.className = 'msg ' + role;
 
-    if (!password) { showError('أدخل كلمة المرور'); return; }
-    if (!prompt) { showError('اكتب طلبك أولًا'); return; }
+    // مرفقات (صور أو ملفات)
+    if (options.attachments && options.attachments.length) {
+      options.attachments.forEach(att => {
+        if (att.type === 'image') {
+          const img = document.createElement('img');
+          img.src = att.data;
+          img.onclick = () => openLightbox(att.data);
+          div.appendChild(img);
+        } else {
+          const fa = document.createElement('div');
+          fa.className = 'file-attach';
+          fa.innerHTML = '<span class="icon">📄</span><span>' + escapeHtml(att.name) + '</span>';
+          div.appendChild(fa);
+        }
+      });
+    }
 
-    localStorage.setItem('site_password', password);
-    localStorage.setItem('site_model', model);
+    // نص الرسالة
+    if (content) {
+      const textNode = document.createElement('div');
+      textNode.textContent = content;
+      div.appendChild(textNode);
+    }
 
-    btn.disabled = true;
-    btn.innerHTML = 'جارٍ التوليد<span class="loading"></span>';
-    output.classList.add('visible');
-    textDiv.textContent = 'انتظر قليلًا...';
+    // الوقت
+    const time = document.createElement('span');
+    time.className = 'time';
+    time.textContent = now();
+    div.appendChild(time);
+
+    // أزرار على رسالة البوت
+    if (role === 'bot' && content) {
+      const actions = document.createElement('div');
+      actions.className = 'msg-actions';
+
+      const copyBtn = document.createElement('button');
+      copyBtn.textContent = '📋 نسخ';
+      copyBtn.onclick = () => {
+        navigator.clipboard.writeText(content);
+        copyBtn.textContent = '✅ تم';
+        setTimeout(() => copyBtn.textContent = '📋 نسخ', 1500);
+      };
+      actions.appendChild(copyBtn);
+
+      const dlBtn = document.createElement('button');
+      dlBtn.textContent = '⬇️ تنزيل كملف';
+      dlBtn.onclick = () => downloadText(content);
+      actions.appendChild(dlBtn);
+
+      div.appendChild(actions);
+    }
+
+    chatArea.appendChild(div);
+    scrollToBottom();
+    return div;
+  }
+
+  function addTyping() {
+    const div = document.createElement('div');
+    div.className = 'typing-indicator';
+    div.id = 'typing';
+    div.innerHTML = '<span></span><span></span><span></span>';
+    chatArea.appendChild(div);
+    scrollToBottom();
+    return div;
+  }
+  function removeTyping() {
+    const t = document.getElementById('typing');
+    if (t) t.remove();
+  }
+
+  function scrollToBottom() {
+    requestAnimationFrame(() => {
+      chatArea.scrollTop = chatArea.scrollHeight;
+    });
+  }
+
+  function escapeHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  function openLightbox(src) {
+    document.getElementById('lightboxImg').src = src;
+    document.getElementById('lightbox').classList.add('visible');
+  }
+
+  function downloadText(content) {
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'response-' + Date.now() + '.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ============ المرفقات ============
+  async function handleFiles(event) {
+    const files = Array.from(event.target.files || []);
+    for (const file of files) {
+      if (file.type.startsWith('image/')) {
+        const data = await readAsDataURL(file);
+        pendingAttachments.push({ type: 'image', name: file.name, data, mime: file.type });
+      } else {
+        // ملف نصي
+        if (file.size > 500 * 1024) {
+          alert('الملف كبير جدًا (الحد 500KB): ' + file.name);
+          continue;
+        }
+        const text = await readAsText(file);
+        pendingAttachments.push({ type: 'text', name: file.name, data: text, mime: file.type });
+      }
+    }
+    fileInput.value = '';
+    renderAttachments();
+  }
+
+  function readAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result);
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+  }
+  function readAsText(file) {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result);
+      r.onerror = reject;
+      r.readAsText(file, 'utf-8');
+    });
+  }
+
+  function renderAttachments() {
+    if (!pendingAttachments.length) {
+      attachPreview.classList.remove('visible');
+      attachPreview.innerHTML = '';
+      return;
+    }
+    attachPreview.innerHTML = '';
+    attachPreview.classList.add('visible');
+    pendingAttachments.forEach((att, i) => {
+      const item = document.createElement('div');
+      item.className = 'attach-item';
+      if (att.type === 'image') {
+        const img = document.createElement('img');
+        img.src = att.data;
+        item.appendChild(img);
+      } else {
+        const ic = document.createElement('span');
+        ic.textContent = '📄';
+        item.appendChild(ic);
+      }
+      const name = document.createElement('span');
+      name.textContent = att.name.length > 18 ? att.name.slice(0, 15) + '...' : att.name;
+      item.appendChild(name);
+
+      const rm = document.createElement('button');
+      rm.className = 'remove';
+      rm.textContent = '×';
+      rm.onclick = () => { pendingAttachments.splice(i, 1); renderAttachments(); };
+      item.appendChild(rm);
+
+      attachPreview.appendChild(item);
+    });
+  }
+
+  // ============ الإرسال ============
+  async function sendMessage() {
+    const text = textInput.value.trim();
+    if (!text && !pendingAttachments.length) return;
+
+    const password = localStorage.getItem('chat_password');
+    if (!password) { lockNow(); return; }
+
+    const model = modelSelect.value;
+    localStorage.setItem('chat_model', model);
+
+    const attachments = [...pendingAttachments];
+    const userContent = text || (attachments.length ? '(مرفق)' : '');
+
+    // إظهار رسالة المستخدم
+    addMessage('user', userContent, { attachments });
+
+    // بناء محتوى الرسالة للـ API
+    const contentParts = [];
+    if (text) contentParts.push({ type: 'text', text });
+
+    for (const att of attachments) {
+      if (att.type === 'image') {
+        contentParts.push({ type: 'image_url', image_url: { url: att.data } });
+      } else {
+        contentParts.push({
+          type: 'text',
+          text: '\n\n--- ملف: ' + att.name + ' ---\n' + att.data + '\n--- نهاية الملف ---'
+        });
+      }
+    }
+
+    history.push({ role: 'user', content: contentParts.length > 1 ? contentParts : userContent });
+
+    // تصفير الحقول
+    textInput.value = '';
+    textInput.style.height = 'auto';
+    pendingAttachments = [];
+    renderAttachments();
+    updateSendButton();
+
+    // إظهار مؤشر الكتابة
+    addTyping();
+    sendBtn.disabled = true;
 
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, password, model })
+        body: JSON.stringify({
+          password,
+          model,
+          messages: history
+        })
       });
 
       const data = await res.json();
+      removeTyping();
 
       if (!res.ok) {
-        textDiv.textContent = '';
-        output.classList.remove('visible');
-        showError(data.error || 'حدث خطأ غير متوقع');
+        addSystemMessage('⚠️ ' + (data.error || 'حدث خطأ'));
+        sendBtn.disabled = false;
         return;
       }
 
-      textDiv.textContent = data.text;
+      addMessage('bot', data.text);
+      history.push({ role: 'assistant', content: data.text });
+
+      // حد أقصى للسياق
+      if (history.length > 24) history = history.slice(-24);
     } catch (err) {
-      output.classList.remove('visible');
-      showError('تعذر الاتصال بالخادم: ' + err.message);
-    } finally {
-      btn.disabled = false;
-      btn.textContent = '✨ توليد';
+      removeTyping();
+      addSystemMessage('⚠️ تعذر الاتصال: ' + err.message);
     }
+
+    sendBtn.disabled = false;
+    updateSendButton();
   }
 
-  function copyText() {
-    const text = document.getElementById('text').textContent;
-    if (!text) return;
-    navigator.clipboard.writeText(text).then(() => {
-      const btn = event.target;
-      const original = btn.textContent;
-      btn.textContent = '✅ تم النسخ';
-      setTimeout(() => btn.textContent = original, 2000);
-    });
-  }
-
-  function downloadText() {
-    const text = document.getElementById('text').textContent;
-    if (!text) return;
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'content-' + Date.now() + '.txt';
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  function clearAll() {
-    document.getElementById('prompt').value = '';
-    document.getElementById('text').textContent = '';
-    document.getElementById('output').classList.remove('visible');
-    hideError();
-  }
-
-  // Ctrl+Enter لتوليد سريع
-  document.getElementById('prompt').addEventListener('keydown', (e) => {
-    if (e.ctrlKey && e.key === 'Enter') generate();
+  // ============ الإدخال ============
+  textInput.addEventListener('input', () => {
+    textInput.style.height = 'auto';
+    textInput.style.height = Math.min(textInput.scrollHeight, 120) + 'px';
+    updateSendButton();
   });
+
+  textInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (!sendBtn.disabled) sendMessage();
+    }
+  });
+
+  function updateSendButton() {
+    const hasText = textInput.value.trim().length > 0;
+    const hasAttach = pendingAttachments.length > 0;
+    sendBtn.disabled = !(hasText || hasAttach);
+  }
 </script>
 </body>
 </html>
