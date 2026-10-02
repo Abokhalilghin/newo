@@ -1,1 +1,248 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مولد المحتوى</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, "Segoe UI", Tahoma, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f7fa;
+      color: #1a1a1a;
+      line-height: 1.7;
+    }
+    h1 { font-size: 24px; margin-bottom: 8px; }
+    .subtitle { color: #666; font-size: 14px; margin-bottom: 24px; }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      margin-bottom: 16px;
+    }
+    label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; color: #333; }
+    input, textarea, select {
+      width: 100%;
+      padding: 12px;
+      font-size: 15px;
+      border: 1px solid #d0d5dd;
+      border-radius: 8px;
+      font-family: inherit;
+      outline: none;
+      transition: border 0.15s;
+    }
+    input:focus, textarea:focus, select:focus { border-color: #0070f3; }
+    textarea { min-height: 120px; resize: vertical; }
+    .row { display: flex; gap: 12px; align-items: flex-end; }
+    .row > * { flex: 1; }
+    button {
+      background: #0070f3;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    button:hover:not(:disabled) { background: #005bb5; }
+    button:disabled { background: #a0aec0; cursor: not-allowed; }
+    .btn-group { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .btn-secondary { background: #28a745; }
+    .btn-secondary:hover { background: #1e7e34; }
+    .btn-ghost { background: #e2e8f0; color: #333; }
+    .btn-ghost:hover { background: #cbd5e0; }
+    .output {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      line-height: 1.9;
+      display: none;
+    }
+    .output.visible { display: block; }
+    .output-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .output-title { font-weight: 600; font-size: 14px; color: #666; }
+    .error {
+      background: #fee;
+      color: #c00;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 12px;
+      display: none;
+      font-size: 14px;
+    }
+    .error.visible { display: block; }
+    .loading {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #fff;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      vertical-align: middle;
+      margin-left: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
 
+<h1>✍️ مولد المحتوى</h1>
+<p class="subtitle">اكتب طلبك واحصل على محتوى احترافي جاهز للنسخ.</p>
+
+<div class="card">
+  <label for="password">كلمة المرور</label>
+  <input type="password" id="password" placeholder="أدخل كلمة المرور" style="margin-bottom: 16px;">
+
+  <label for="model">النموذج</label>
+  <select id="model" style="margin-bottom: 16px;">
+    <option value="claude-sonnet-5">Claude Sonnet 5 (كتابة إبداعية)</option>
+    <option value="gemini-3.7-flash">Gemini 3.7 Flash (سريع)</option>
+    <option value="gpt-5.5">GPT 5.5 (متوازن)</option>
+    <option value="deepseek-v4-flash-0731">DeepSeek V4 Flash (اقتصادي)</option>
+    <option value="seed-2.1-turbo">Seed 2.1 Turbo (سريع جدًا)</option>
+    <option value="claude-opus-4.6">Claude Opus 4.6 (قوي)</option>
+    <option value="gpt-5.5-pro">GPT 5.5 Pro (متقدم)</option>
+  </select>
+
+  <label for="prompt">طلبك</label>
+  <textarea id="prompt" placeholder="مثال: اكتب مقالًا عن الذكاء الاصطناعي في التعليم..."></textarea>
+
+  <div class="btn-group">
+    <button id="generateBtn" onclick="generate()">✨ توليد</button>
+    <button class="btn-ghost" onclick="clearAll()">مسح</button>
+  </div>
+
+  <div id="error" class="error"></div>
+</div>
+
+<div id="output" class="output">
+  <div class="output-header">
+    <span class="output-title">النتيجة</span>
+    <div class="btn-group" style="margin: 0;">
+      <button class="btn-secondary" onclick="copyText()">📋 نسخ</button>
+      <button class="btn-ghost" onclick="downloadText()">⬇️ تنزيل كملف</button>
+    </div>
+  </div>
+  <div id="text"></div>
+</div>
+
+<script>
+  // استرجاع كلمة المرور والنموذج المحفوظين
+  window.addEventListener('DOMContentLoaded', () => {
+    const savedPass = localStorage.getItem('site_password');
+    if (savedPass) document.getElementById('password').value = savedPass;
+    const savedModel = localStorage.getItem('site_model');
+    if (savedModel) document.getElementById('model').value = savedModel;
+  });
+
+  function showError(msg) {
+    const el = document.getElementById('error');
+    el.textContent = msg;
+    el.classList.add('visible');
+  }
+
+  function hideError() {
+    document.getElementById('error').classList.remove('visible');
+  }
+
+  async function generate() {
+    const prompt = document.getElementById('prompt').value.trim();
+    const password = document.getElementById('password').value.trim();
+    const model = document.getElementById('model').value;
+    const btn = document.getElementById('generateBtn');
+    const output = document.getElementById('output');
+    const textDiv = document.getElementById('text');
+
+    hideError();
+
+    if (!password) { showError('أدخل كلمة المرور'); return; }
+    if (!prompt) { showError('اكتب طلبك أولًا'); return; }
+
+    localStorage.setItem('site_password', password);
+    localStorage.setItem('site_model', model);
+
+    btn.disabled = true;
+    btn.innerHTML = 'جارٍ التوليد<span class="loading"></span>';
+    output.classList.add('visible');
+    textDiv.textContent = 'انتظر قليلًا...';
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, password, model })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        textDiv.textContent = '';
+        output.classList.remove('visible');
+        showError(data.error || 'حدث خطأ غير متوقع');
+        return;
+      }
+
+      textDiv.textContent = data.text;
+    } catch (err) {
+      output.classList.remove('visible');
+      showError('تعذر الاتصال بالخادم: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '✨ توليد';
+    }
+  }
+
+  function copyText() {
+    const text = document.getElementById('text').textContent;
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = event.target;
+      const original = btn.textContent;
+      btn.textContent = '✅ تم النسخ';
+      setTimeout(() => btn.textContent = original, 2000);
+    });
+  }
+
+  function downloadText() {
+    const text = document.getElementById('text').textContent;
+    if (!text) return;
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'content-' + Date.now() + '.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function clearAll() {
+    document.getElementById('prompt').value = '';
+    document.getElementById('text').textContent = '';
+    document.getElementById('output').classList.remove('visible');
+    hideError();
+  }
+
+  // Ctrl+Enter لتوليد سريع
+  document.getElementById('prompt').addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.key === 'Enter') generate();
+  });
+</script>
+</body>
+</html>
