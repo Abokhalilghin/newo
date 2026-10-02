@@ -3,18 +3,16 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { prompt, password, model } = req.body || {};
+  const { password, messages, model } = req.body || {};
 
-  // التحقق من كلمة المرور
   if (!password || password !== process.env.SITE_PASSWORD) {
     return res.status(401).json({ error: 'كلمة المرور خاطئة' });
   }
 
-  if (!prompt || !prompt.trim()) {
-    return res.status(400).json({ error: 'الطلب فارغ' });
+  if (!messages || !Array.isArray(messages) || messages.length === 0) {
+    return res.status(400).json({ error: 'الرسائل فارغة' });
   }
 
-  // النماذج المسموحة (لمنع إساءة الاستخدام)
   const ALLOWED_MODELS = [
     'claude-sonnet-5',
     'gemini-3.7-flash',
@@ -31,9 +29,17 @@ export default async function handler(req, res) {
     '1. لا تجامل السائل ولا تمدح السؤال. اذهب مباشرة للجواب.\n' +
     '2. لا مقدمات إنشائية ولا عبارات مجاملة.\n' +
     '3. أعطِ أفضل حل ممكن، حتى لو كان صريحًا.\n' +
-    '4. في الإبداع: زوايا غير مطروقة، وتجنّب الكليشيهات.\n' +
+    '4. في الإبداع: زوايا غير مطروحة، وتجنّب الكليشيهات.\n' +
     '5. في المحتوى: أمثلة ملموسة، أرقام، وتفاصيل قابلة للتطبيق.\n' +
-    '6. عربية فصيحة وسلسة، بلا حشو.';
+    '6. عربية فصيحة وسلسة، بلا حشو.\n' +
+    '7. إذا أرسل المستخدم صورة، حلّلها بدقة وأجب عن سؤاله حولها.\n' +
+    '8. إذا أرسل ملفًا نصيًا، اقرأه واعتمد عليه في ردك.';
+
+  // أضف system prompt في البداية
+  const fullMessages = [
+    { role: 'system', content: SYSTEM_PROMPT },
+    ...messages
+  ];
 
   try {
     const response = await fetch('https://cleanapis.com/v1/chat/completions', {
@@ -44,17 +50,14 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: chosenModel,
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: prompt }
-        ]
+        messages: fullMessages
       })
     });
 
     if (!response.ok) {
       const errText = await response.text();
       return res.status(response.status).json({
-        error: 'خطأ من مزود الذكاء الاصطناعي: ' + errText.substring(0, 200)
+        error: 'خطأ من المزود: ' + errText.substring(0, 300)
       });
     }
 
